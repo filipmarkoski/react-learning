@@ -14,6 +14,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import DeleteIcon from '@mui/icons-material/Delete';
 import {useEffect, useState} from "react";
 import {red} from '@mui/material/colors';
+import {MouseEvent} from 'react';
 
 export interface ITask {
     ID: number,
@@ -35,7 +36,13 @@ export function Tasks() {
     const optionsTask = tasks.map(task => task.Name);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:5000/api/tasks')
+        // fetch('http://127.0.0.1:5000/api/tasks')
+        fetch('tasks.json', {
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json"
+            }
+        })
             .then(response => response.json())
             .then(data => setTasks(data))
             .catch(error => console.error(error));
@@ -70,46 +77,35 @@ export function Tasks() {
     };
 
     // : ((event: MouseEvent) => void)
-    const toggle = ((taskID: number) => {
-        console.log(taskID);
-        return (e: MouseEvent) => {
-            e.preventDefault();
-            console.log(e);
+    const toggle = (event: MouseEvent, taskID: number) => {
+        event.preventDefault();
 
-            console.log(taskID);
+        const currentIndex = checked.indexOf(taskID);
+        const newChecked = [...checked];
 
-            const currentIndex = checked.indexOf(taskID);
-            const newChecked = [...checked];
+        if (currentIndex === -1) {
+            newChecked.push(taskID);
+        } else {
+            newChecked.splice(currentIndex, 1);
+        }
 
-            if (currentIndex === -1) {
-                newChecked.push(taskID);
-            } else {
-                newChecked.splice(currentIndex, 1);
+        if (event.shiftKey) {
+            console.log('Shift-Click recognized.');
+
+            if (newChecked.length === 3) {
+                let startValue: number = tasks.map(task => task.ID).indexOf(newChecked[1]);
+                let endValue: number = tasks.map(task => task.ID).indexOf(newChecked[2]);
+                let minValue: number = Math.min(startValue, endValue);
+                let maxValue: number = Math.max(startValue, endValue) + 1;
+                setChecked([0, ...tasks.slice(minValue, maxValue).map(task => task.ID)]);
+                return;
             }
-            setChecked(newChecked);
+        }
+        setChecked(newChecked);
+    };
 
-            if (e.shiftKey) {
-                console.log('Shift-Click recognized.');
-
-                if (checked.length === 3) {
-                    let startValue = tasks.map(task => task.ID).indexOf(checked[1]);
-                    let endValue = tasks.map(task => task.ID).indexOf(checked[2]);
-                    startValue = Math.min(startValue, endValue)
-                    endValue = Math.max(startValue, endValue) + 1
-                    console.log(startValue, endValue)
-                    console.log(tasks.slice(startValue, endValue))
-                    console.log(tasks.slice(startValue, endValue).map(task => task.ID))
-                    console.log([0, ...tasks.slice(startValue, endValue).map(task => task.ID)])
-                    setChecked([0, ...tasks.slice(startValue, endValue).map(task => task.ID)])
-                }
-
-
-            }
-        };
-    });
 
     return (
-
         <Box
             sx={{
                 border: 1,
@@ -117,6 +113,7 @@ export function Tasks() {
                 padding: 1
             }}
         >
+
             <Autocomplete
                 disablePortal
                 id="combo-box-demo"
@@ -132,7 +129,7 @@ export function Tasks() {
                     return (
                         <ListItem
                             key={task.ID}
-                            onClick={() => toggle(task.ID)}
+                            onClick={(event) => toggle(event as MouseEvent, task.ID)}
                             secondaryAction={
                                 <IconButton edge="end" aria-label="comments"
                                             onClick={() => deleteTask(task.ID)}>

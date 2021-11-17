@@ -1,7 +1,7 @@
 [
     {
         "ID": 2,
-        "Name": "Clean Room",
+        "Name": "Clean Room from JSON",
         "DateCreated": "2021-11-09 10:50:55",
         "IsActive": true,
         "Description": "Clean Room Description",
